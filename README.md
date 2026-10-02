@@ -34,6 +34,8 @@
 
 [Laya](https://github.com/NandhaKishorM/laya) est un petit modèle open-source de 421 M de paramètres. Ce n'est **pas un LLM** : c'est un classifieur. Il ne génère pas de texte, il répond en une seule passe à des questions typées : un choix parmi des options, un score, un oui/non avec une probabilité.
 
+Il est présenté comme **l'équivalent open-source et hébergeable chez soi de Jev**, le modèle de décision cloud de TypeSafe AI : mêmes types de questions (choix, score, oui/non), sorti 3 jours après lui. Jev est payant à l'usage ($0,042 par million de jetons en entrée) et n'était accessible que sur liste d'attente au moment de nos tests. Les deux projets ne sont **pas liés**, et l'auteur de Laya revendique avoir publié l'idée en premier (arXiv, mars 2025).
+
 La vidéo virale le montre « 100× plus rapide que le cloud ». En creusant :
 
 | Ce que la démo dit | Ce qu'on a vérifié |
@@ -42,7 +44,7 @@ La vidéo virale le montre « 100× plus rapide que le cloud ». En creusant :
 | 0,766 de justesse | Ce score vient d'un checkpoint **entraîné sur le jeu d'entraînement du benchmark lui-même**. Sans entraînement (zero-shot) : **0,362, contre 0,318 au hasard**. |
 | Bon en modération | Sur des données jamais vues : **0,53**, ça ne tient pas. |
 | Multilingue | En français : **0,54 à 0,59** sur 20 options, soit environ 4 erreurs sur 10. |
-| Comparé au concurrent cloud | Le README de l'auteur précise que les chiffres du concurrent **n'ont jamais été mesurés par lui**. Ils sont repris de billets de blog. |
+| Comparé à Jev | Le README de l'auteur précise que les chiffres de Jev **n'ont jamais été mesurés par lui** (pas d'accès à son API). Ils sont repris de billets de blog. |
 
 > **Règle qu'on en tire** : avant de croire un écart annoncé, cherche **qui a mesuré les deux côtés**. Ici, personne. Chaque maillon (article → README → vidéo de 30 s) perd une réserve en route.
 

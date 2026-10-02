@@ -1,0 +1,5 @@
+.venv/
+__pycache__/
+modeles/
+*.jsonl
+.hybride-cache.npz

@@ -1,0 +1,57 @@
+name: Dependabot fusion automatique
+
+# Agent de fusion : patch/minor (et securite non majeure) -> auto-merge squash ;
+# majeure -> jamais (label + commentaire). L'auto-merge n'aboutit que si les verifications
+# requises de la branche sont vertes. Active seulement si la variable de depot
+# DEPENDABOT_FUSION_AUTO vaut 'true' (posee uniquement quand une porte de tests est requise).
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  fusion:
+    if: github.actor == 'dependabot[bot]' && vars.DEPENDABOT_FUSION_AUTO == 'true'
+    runs-on: [self-hosted, fyh]
+    steps:
+      - id: meta
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Decision
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          UPDATE_TYPE: ${{ steps.meta.outputs.update-type }}
+          GHSA: ${{ steps.meta.outputs.ghsa-id }}
+          ALERT: ${{ steps.meta.outputs.alert-state }}
+          ROMA_OK: ${{ vars.ROMA_MAJEURE_AUTORISEE }}
+        run: |
+          set -eu
+          majeure=0
+          [ "$UPDATE_TYPE" = "version-update:semver-major" ] && majeure=1
+          if [ "$majeure" = 1 ]; then
+            case "${GH_REPO,,}" in
+              *roma*) [ "${ROMA_OK:-}" = "true" ] && majeure=0 ;;
+            esac
+          fi
+          if [ "$majeure" = 1 ]; then
+            gh label create majeure --color B60205 --description "Mise a jour majeure : revue humaine" 2>/dev/null || true
+            gh pr edit "$PR_URL" --add-label majeure
+            gh pr comment "$PR_URL" --body "Mise a jour majeure : pas de fusion automatique, revue humaine requise."
+            exit 0
+          fi
+          case "$UPDATE_TYPE" in
+            version-update:semver-patch|version-update:semver-minor) ok=1 ;;
+            version-update:semver-major) ok=1 ;; # atteint seulement si Roma l'autorise
+            *) ok=0 ;;
+          esac
+          if [ -n "$GHSA" ] || [ -n "$ALERT" ]; then ok=1; fi
+          if [ "$ok" = 1 ]; then
+            gh pr merge --auto --squash "$PR_URL"
+          fi
